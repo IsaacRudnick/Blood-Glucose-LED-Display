@@ -17,7 +17,7 @@ This is a complete project for a 32x8 RGB LED matrix display using an ESP32 micr
 ## Bill of Materials
 
 This project requires access to a 3D printer if you want to create the enclosure, but the display can be used without it.
-Unique items. In the "Required" column, "Y" means it is necessary and "N" means it is only needed if you want to build the enclosure. "E" means it is optional but recommended for best results.
+Unique items. In the "Required" column, "Y" means it is necessary and "N" means it is only needed if you want to build the enclosure. 
 
 | Required | Quantity | Part                                                                | Approx. Price (USD) |
 | -------- | -------- | ------------------------------------------------------------------- | ------------------- |
