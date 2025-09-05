@@ -8,3 +8,9 @@
 
 #define SECONDS_BETWEEN_READINGS 300       // Seconds between readings (5 minutes).
 #define OLD_DATA_THRESHOLD_SECONDS 15 * 60 // If data is older than this, show error (15 minutes).
+
+// To modify the display colors or logic, Ctrl+F for "Modify color logic here" in src/main.cpp
+#define MODERATE_LOW_THRESHOLD 75   // Below this value, show orange alert color.
+#define CRITICAL_LOW_THRESHOLD 65   // Below this value, show red alert color.
+#define MODERATE_HIGH_THRESHOLD 180 // Above this value, show orange alert color.
+#define CRITICAL_HIGH_THRESHOLD 200 // Above this value, show red alert color.

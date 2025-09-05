@@ -19,7 +19,7 @@ CRGB leds[LED_COUNT];
 
 // NTP Client setup
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000); // UTC timezone, update every 60s
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60 * 1000); // UTC timezone, update every 60s
 
 WiFiClientSecure wifiClient;
 HttpClient client(wifiClient, serverName, port);
@@ -40,7 +40,6 @@ bool isDayTime()
 
 void setMaxBrightnessFromTime()
 {
-  // If between 7 AM and 7 PM, use full brightness, else dim
   if (isDayTime())
   {
     FastLED.setBrightness(DAY_BRIGHTNESS);
@@ -52,16 +51,21 @@ void setMaxBrightnessFromTime()
 }
 
 // Map 2D coords to LED index for your matrix layout
+// Zero-based indexing: (0,0) is bottom-left, (31,7) is top-right
 int mapXYtoIndex(int x, int y)
 {
+  // Subtract 1 for 0-based indexing
   int colFromRight = WIDTH - 1 - x;
   int colStart = colFromRight * HEIGHT;
-  if (colFromRight % 2 == 0)
+  // Serpentine layout, so reverse every other column
+  bool isEvenCol = (colFromRight % 2 == 0);
+  if (isEvenCol)
   {
     return colStart + y; // Even column: bottom → top
   }
   else
   {
+    // Subtract 1 for 0-based indexing
     return colStart + (HEIGHT - 1 - y); // Odd column: top → bottom
   }
 }
@@ -72,7 +76,7 @@ void drawChar(char c, int x, int yTop, CRGB color)
   if (c < 32)
     return; // Only printable chars supported
 
-  int charIndex = (c - 32) * 6; // Each char uses 6 bytes (rows)
+  int charIndex = (c - 32) * 6; // Each char uses 6 bytes (rows), though the last 3 are empty.
   int width = font4x6[0];
   int height = font4x6[1];
 
@@ -112,7 +116,7 @@ void drawString(const char *str, int xStart, int yTop, CRGB color)
       continue;
     }
     drawChar(str[i], x, yTop, color);
-    // Move cursor to the right by 4, since font is 4 pixels wide
+    // Move cursor to the right by 4, since font is 4 pixels wide (spaces are built in)
     x += 4;
   }
 }
@@ -148,20 +152,42 @@ void drawProgressBar(int elapsedTimeSeconds, int maxTimeSeconds)
   leds[mapXYtoIndex(barLength - 1, 0)] = CRGB::White;
 }
 
+CRGB getColorForValue(int value)
+{
+  // Modify color logic here
+  // This is the default color for in-range values
+  CRGB color = CRGB::Green;
+  // If value is beyond critical threshold, show red
+  if (value < CRITICAL_LOW_THRESHOLD || value > CRITICAL_HIGH_THRESHOLD)
+  {
+    color = CRGB::Red;
+  }
+  // If value is beyond moderate threshold, show orange
+  else if (value < MODERATE_LOW_THRESHOLD || value > MODERATE_HIGH_THRESHOLD)
+  {
+    color = CRGB(255, 140, 0); // Orange
+  }
+  return color;
+}
+
 // Display value, delta and progress bar
 void displayValueAndDelta(int value, int delta, int elapsedSeconds)
 {
   FastLED.clear();
 
-  CRGB color = CRGB::Green;
-  if (value < 65 || value > 200)
+  CRGB color = getColorForValue(value);
+
+  // If value is beyond critical threshold, show red
+  if (value < CRITICAL_LOW_THRESHOLD || value > CRITICAL_HIGH_THRESHOLD)
   {
     color = CRGB::Red;
   }
-  else if (value < 75 || value > 180)
+  // If value is beyond moderate threshold, show orange
+  else if (value < MODERATE_LOW_THRESHOLD || value > MODERATE_HIGH_THRESHOLD)
   {
     color = CRGB(255, 140, 0); // Orange
   }
+  // This is the end of the color function
 
   char displayStr[12];
   snprintf(displayStr, sizeof(displayStr), " %d %c%d", value, (delta >= 0 ? '+' : '-'), abs(delta));
@@ -302,7 +328,7 @@ bool ensureWiFi()
   if (WiFi.status() == WL_CONNECTED)
     return true;
 
-  WiFi.begin(ssid, password);
+  WiFi.reconnect();
   delay(500);
   Serial.print("Wifi disconnected. Reconnecting...");
   displayWifiError();
