@@ -27,7 +27,15 @@ HttpClient client(wifiClient, serverName, port);
 bool isDayTime()
 {
   int currentHour = timeClient.getHours();
-  return (currentHour >= DAY_START_HOUR && currentHour < NIGHT_START_HOUR);
+  // Account for the fact that night_start_hour might be after midnight
+  if (DAY_START_HOUR < NIGHT_START_HOUR)
+  {
+    return (currentHour >= DAY_START_HOUR && currentHour < NIGHT_START_HOUR);
+  }
+  else
+  {
+    return (currentHour >= DAY_START_HOUR || currentHour < NIGHT_START_HOUR);
+  }
 }
 
 void setMaxBrightnessFromTime()
