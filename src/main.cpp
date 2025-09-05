@@ -142,10 +142,11 @@ void drawProgressBar(int elapsedTimeSeconds, int maxTimeSeconds)
     }
     return;
   }
-  // Nighttime progress bar is a single pixel moving from left to right.
-  // There's also a start and end pixel in dark blue for visual reference.
+  // Modify color logic here (for progress bar)
+  // Nighttime progress bar is a single pixel (head of progress bar) moving from left to right.
+  // There's also a start and end pixel in blue for visual reference.
 
-  // First and last pixel of bottom row in dark blue
+  // First and last pixel of bottom row in blue
   leds[mapXYtoIndex(0, 0)] = CRGB::DarkBlue;
   leds[mapXYtoIndex(WIDTH - 1, 0)] = CRGB::DarkBlue;
   // Last pixel of progress bar in white
