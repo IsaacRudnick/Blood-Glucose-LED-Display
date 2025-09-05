@@ -3,7 +3,17 @@
 This is a complete project for a 32x8 RGB LED matrix display using an ESP32 microcontroller. The project includes hardware design files for the physical enclosure, assembly instructions, and microcontroller code for driving the display.
 
 ## Features
-- Displays blood glucose readings from any Nightscout instance API. 
+
+- **Real-Time Blood Glucose Display:** Continuously fetches and displays the latest blood glucose readings from a Nightscout API.
+- **LED Matrix Visualization:** Shows readings, delta (change), and a progress bar on a 32x8 WS2812B LED matrix using a modifiable 4x6 pixel font.
+- **Color-Coded Alerts:** Readings are color-coded (green, orange, red) to indicate normal, warning, or critical glucose levels.
+- **Day/Night Brightness:** Automatically adjusts LED brightness for day and night to reduce glare and save power.
+- **Animated Boot Sequence:** Displays a white pixel animation and a rainbow wave on startup.
+- **Wi-Fi and HTTP Error Handling:** Shows clear error messages on the display if Wi-Fi or API connection fails.
+- **Progress Bar:** Visualizes time since last reading with a dynamic progress bar, adapting its style for day and night.
+- **Old Data Warning:** Alerts if the displayed data is outdated.
+- **Configurable Settings:** Easily adjust brightness, day/night hours, and data refresh intervals in `Settings.h`.
+- **Secure API Access:** Uses HTTPS and a personal API token for secure data retrieval.
 
 ## Assembly Instructions
 
