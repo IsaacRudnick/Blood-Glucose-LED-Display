@@ -172,7 +172,7 @@ CRGB getColorForValue(int value)
 }
 
 // Display value, delta and progress bar
-void displayValueAndDelta(int value, int delta, int elapsedSeconds)
+void updateDisplay(int value, int delta, int elapsedSeconds)
 {
   FastLED.clear();
 
@@ -287,11 +287,11 @@ void setup()
   WiFi.begin(ssid, password);
 
   unsigned long start_connecting_time = millis();
+  // Wait up to 10 seconds for connection
   int try_for_seconds = 10;
   FastLED.clear();
   drawString("WAITWIFI", 0, 1, CRGB::White);
   FastLED.show();
-  // Wait up to 10 seconds for connection
   while (WiFi.status() != WL_CONNECTED && (millis() - start_connecting_time) < try_for_seconds * 1000)
   {
     delay(500);
@@ -343,11 +343,19 @@ void displayHTTPError()
   FastLED.show();
 }
 
+void displayJSONError()
+{
+  FastLED.clear();
+  drawString("JSON ERR", 1, 1, CRGB::Red);
+  FastLED.show();
+}
+
 // Url is string + apiToken
 const String url = String("/api/v2/entries.json?count=2&token=") + apiToken;
 
 // Fetch the latest reading from the API
 // Returns true if successful, false otherwise.
+// Handles display of errors.
 bool fetchLatestReading()
 {
   Serial.print("Making request: ");
@@ -366,9 +374,12 @@ bool fetchLatestReading()
   }
 
   JsonDocument doc;
-  if (deserializeJson(doc, response))
+  DeserializationError err = deserializeJson(doc, response);
+  if (err)
   {
-    Serial.println("JSON parse error");
+    Serial.print("JSON parse error: ");
+    Serial.println(err.c_str());
+    displayJSONError();
     return false;
   }
 
@@ -411,20 +422,13 @@ void loop()
                                     ? (int)(currentEpoch - lastReading.epoch)
                                     : INT_MAX; // INT_MAX so that we always fetch on the first run
 
-  // If we expect a new reading, fetch it.
-  if (secondsSinceLastReading >= SECONDS_BETWEEN_READINGS)
+  // If we expect a new reading within START_FETCHING_EARLY_SECONDS, start trying to fetch one.
+  if (secondsSinceLastReading >= SECONDS_BETWEEN_READINGS - START_FETCHING_EARLY_SECONDS)
   {
-    if (fetchLatestReading())
-    {
-      secondsSinceLastReading = (int)(currentEpoch - lastReading.epoch);
-    }
-    else
-    {
-      // fetchLatestReading will only return false if there was an HTTP error or JSON parse error.
-      // Since nightscout API is static, JSON parsing (should) always work. So if we get here, it's an HTTP error.
-      displayHTTPError();
-      return;
-    }
+    fetchLatestReading();
+    secondsSinceLastReading = (lastReading.epoch > 0)
+                                  ? (int)(currentEpoch - lastReading.epoch)
+                                  : INT_MAX;
   }
 
   // If the last reading is too old, show an error.
@@ -434,13 +438,13 @@ void loop()
     return;
   }
 
-  // For 10 seconds, display the value, delta and progress bar.
+  // For 5 seconds, display the value, delta and progress bar.
   // This lets us avoid making too many HTTP requests too quickly.
   unsigned long start = millis();
-  // This is a loop instead of a single displayValueAndDelta call so that the progress bar updates over time.
-  while (millis() - start < 10 * 1000)
+  // This is a loop instead of a single updateDisplay call so that the progress bar updates over time.
+  while (millis() - start < SECONDS_BETWEEN_FETCHES * 1000)
   {
-    displayValueAndDelta(lastReading.value, lastReading.delta, secondsSinceLastReading);
+    updateDisplay(lastReading.value, lastReading.delta, secondsSinceLastReading);
     delay(100);
   }
 }

@@ -6,8 +6,10 @@
 #define DAY_START_HOUR 11  // 7 AM EST = 11 AM UTC
 #define NIGHT_START_HOUR 1 // 9 PM EST = 1 AM UTC
 
-#define SECONDS_BETWEEN_READINGS 300       // Seconds between readings (5 minutes).
-#define OLD_DATA_THRESHOLD_SECONDS 15 * 60 // If data is older than this, show error (15 minutes).
+#define SECONDS_BETWEEN_READINGS (5 * 60)    // Seconds between readings. This will depend on your sensor
+#define START_FETCHING_EARLY_SECONDS 10      // Start trying to fetch a new reading this many seconds before SECONDS_BETWEEN_READINGS
+#define SECONDS_BETWEEN_FETCHES 10           // If we fail to fetch a reading, wait this many seconds before trying again. 
+#define OLD_DATA_THRESHOLD_SECONDS (15 * 60) // If data is older than this, show error (15 minutes).
 
 // To modify the display colors or logic, Ctrl+F for "Modify color logic here" in src/main.cpp
 #define MODERATE_LOW_THRESHOLD 75   // Below this value, show orange alert color.
