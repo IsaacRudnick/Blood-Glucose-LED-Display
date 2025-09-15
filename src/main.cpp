@@ -121,6 +121,13 @@ void drawString(const char *str, int xStart, int yTop, CRGB color)
   }
 }
 
+void displayError(const char *message)
+{
+  FastLED.clear();
+  drawString((char *)message, 1, 1, CRGB::Red);
+  FastLED.show();
+}
+
 // Draw bottom row progress bar (y=0)
 void drawProgressBar(int elapsedTimeSeconds, int maxTimeSeconds)
 {
@@ -264,13 +271,6 @@ void runBootSequence()
   bootRainbowWave();
 }
 
-void displayWifiError()
-{
-  FastLED.clear();
-  drawString("WIFI ERR", 1, 1, CRGB::Red);
-  FastLED.show();
-}
-
 void setup()
 {
   Serial.begin(9600);
@@ -300,7 +300,7 @@ void setup()
   {
     Serial.println("Failed to connect to Wi-Fi");
     // Print "WIFI ERR" to display
-    displayWifiError();
+    displayError("WIFI ERR");
   }
   else
   {
@@ -332,22 +332,8 @@ bool ensureWiFi()
   WiFi.reconnect();
   delay(500);
   Serial.print("Wifi disconnected. Reconnecting...");
-  displayWifiError();
+  displayError("WIFI ERR");
   return false;
-}
-
-void displayHTTPError()
-{
-  FastLED.clear();
-  drawString("HTTP ERR", 1, 1, CRGB::Red);
-  FastLED.show();
-}
-
-void displayJSONError()
-{
-  FastLED.clear();
-  drawString("JSON ERR", 1, 1, CRGB::Red);
-  FastLED.show();
 }
 
 // Url is string + apiToken
@@ -369,7 +355,7 @@ bool fetchLatestReading()
   {
     Serial.printf("HTTP Error: %d\n", statusCode);
     Serial.println("Response: " + response);
-    displayHTTPError();
+    displayError("HTTP ERR");
     return false;
   }
 
@@ -379,7 +365,7 @@ bool fetchLatestReading()
   {
     Serial.print("JSON parse error: ");
     Serial.println(err.c_str());
-    displayJSONError();
+    displayError("JSON ERR");
     return false;
   }
 
@@ -396,14 +382,6 @@ bool fetchLatestReading()
   Serial.printf("Delta: %d\n", delta);
 
   return true;
-}
-
-void displayOldDataError()
-{
-  FastLED.clear();
-  drawString("OLD DATA", 1, 1, CRGB::Red);
-  FastLED.show();
-  delay(1000);
 }
 
 void loop()
@@ -425,7 +403,10 @@ void loop()
   // If we expect a new reading within START_FETCHING_EARLY_SECONDS, start trying to fetch one.
   if (secondsSinceLastReading >= SECONDS_BETWEEN_READINGS - START_FETCHING_EARLY_SECONDS)
   {
+    Serial.println("Fetching new reading...");
     fetchLatestReading();
+    // fetchLatestReading updates lastReading on success. If it failed, we keep the old reading.
+    // Thus, we will get the correct secondsSinceLastReading regardless of success or failure of getting a new reading.
     secondsSinceLastReading = (lastReading.epoch > 0)
                                   ? (int)(currentEpoch - lastReading.epoch)
                                   : INT_MAX;
@@ -434,7 +415,8 @@ void loop()
   // If the last reading is too old, show an error.
   if (secondsSinceLastReading > OLD_DATA_THRESHOLD_SECONDS)
   {
-    displayOldDataError();
+    displayError("OLD DATA");
+    // This will cause the next loop to try fetching again.
     return;
   }
 
