@@ -8,8 +8,10 @@
 
 #define SECONDS_BETWEEN_READINGS (5 * 60)    // Seconds between readings. This will depend on your sensor
 #define START_FETCHING_EARLY_SECONDS 10      // Start trying to fetch a new reading this many seconds before SECONDS_BETWEEN_READINGS
-#define SECONDS_BETWEEN_FETCHES 10           // If we fail to fetch a reading, wait this many seconds before trying again. 
-#define OLD_DATA_THRESHOLD_SECONDS (15 * 60) // If data is older than this, show error (15 minutes).
+#define SECONDS_BETWEEN_FETCHES 15           // If we fail to fetch a reading, wait this many seconds before trying again.
+#define OLD_DATA_THRESHOLD_SECONDS (15 * 60) // If data is older than this, show error
+#define WIFI_CONNECT_TIMEOUT_MS (15 * 1000)  // How long to try connecting to WiFi, in milliseconds
+#define HTTP_REQUEST_TIMEOUT_MS (15 * 1000)  // How long to wait for HTTP requests, in milliseconds
 
 // To modify the display colors or logic, Ctrl+F for "Modify color logic here" in src/main.cpp
 #define MODERATE_LOW_THRESHOLD 75   // Below this value, show orange alert color.

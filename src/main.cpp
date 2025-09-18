@@ -276,7 +276,9 @@ void setup()
   Serial.begin(9600);
   delay(100);
 
+  // If LED matrix is using wrong color order, change GRB to RGB or BRG
   FastLED.addLeds<WS2812B, LED_DATA_PIN, GRB>(leds, LED_COUNT);
+  // We don't have the time yet, so this will set to the daytime brightness.
   setMaxBrightnessFromTime();
   FastLED.clear();
   FastLED.show();
@@ -286,16 +288,11 @@ void setup()
   Serial.println(ssid);
   WiFi.begin(ssid, password);
 
-  unsigned long start_connecting_time = millis();
-  // Wait up to 10 seconds for connection
-  int try_for_seconds = 10;
   FastLED.clear();
   drawString("WAITWIFI", 0, 1, CRGB::White);
   FastLED.show();
-  while (WiFi.status() != WL_CONNECTED && (millis() - start_connecting_time) < try_for_seconds * 1000)
-  {
-    delay(500);
-  }
+  WiFi.waitForConnectResult(WIFI_CONNECT_TIMEOUT_MS);
+
   if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("Failed to connect to Wi-Fi");
@@ -311,6 +308,8 @@ void setup()
   timeClient.begin();
   timeClient.update();
 
+  // Wait for time to be set
+  client.setHttpResponseTimeout(HTTP_REQUEST_TIMEOUT_MS);
   // Skip https certificate validation
   wifiClient.setInsecure();
 }
@@ -330,8 +329,7 @@ bool ensureWiFi()
     return true;
 
   WiFi.reconnect();
-  delay(500);
-  Serial.print("Wifi disconnected. Reconnecting...");
+  Serial.println("Wifi disconnected. Reconnecting...");
   displayError("WIFI ERR");
   return false;
 }
@@ -356,6 +354,8 @@ bool fetchLatestReading()
     Serial.printf("HTTP Error: %d\n", statusCode);
     Serial.println("Response: " + response);
     displayError("HTTP ERR");
+    WiFi.reconnect();
+    WiFi.waitForConnectResult(WIFI_CONNECT_TIMEOUT_MS);
     return false;
   }
 
@@ -386,6 +386,8 @@ bool fetchLatestReading()
 
 void loop()
 {
+  // If WiFi is disconnected and we can't reconnect, skip the rest of the loop.
+  // ensureWiFi will display an error and return false if it fails.
   if (!ensureWiFi())
   {
     return;
@@ -404,7 +406,12 @@ void loop()
   if (secondsSinceLastReading >= SECONDS_BETWEEN_READINGS - START_FETCHING_EARLY_SECONDS)
   {
     Serial.println("Fetching new reading...");
-    fetchLatestReading();
+    // If fetchLatestReading fails, exit the loop and try again later.
+    // fetchLatestReading will display an error and return false if it fails.
+    if (!fetchLatestReading())
+    {
+      return;
+    }
     // fetchLatestReading updates lastReading on success. If it failed, we keep the old reading.
     // Thus, we will get the correct secondsSinceLastReading regardless of success or failure of getting a new reading.
     secondsSinceLastReading = (lastReading.epoch > 0)
