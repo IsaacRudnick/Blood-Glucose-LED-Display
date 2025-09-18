@@ -302,6 +302,9 @@ void setup()
   else
   {
     Serial.println("Wi-Fi connected");
+    FastLED.clear();
+    drawString("WAITDATA", 0, 1, CRGB::White);
+    FastLED.show();
   }
 
   // Start an NTP client for accurate UNIX time
