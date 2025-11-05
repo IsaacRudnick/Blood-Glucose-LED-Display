@@ -2,6 +2,13 @@
 
 This is a complete project for a 32x8 RGB LED matrix display using an ESP32 microcontroller. The project includes hardware design files for the physical enclosure, assembly instructions, and microcontroller code for driving the display. Though this project was originally designed to show blood glucose data from a Nightscout API, it can be modified to display anything you want, and you can use the enclosure alone without my code if desired.
 
+## Coming Soon
+
+- Proper pictures
+- 3D Print tolerance improvements
+- Better diffuser grid to eliminate pixel bleed
+- More modular design
+
 ## Features
 
 - **Real-Time Blood Glucose Display:** Continuously fetches and displays the latest blood glucose readings from a Nightscout API.
